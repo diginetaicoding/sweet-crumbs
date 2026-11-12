@@ -13,6 +13,8 @@ const CONFIG = {
       id: "chocolate-truffle",
       name: "Belgian Chocolate Truffle",
       tag: "Bestseller",
+      badgeClass: "badge-yellow rotate-pos",
+      cardClass: "card-white",
       description:
         "Rich dark chocolate sponge layered with silky 55% Belgian couverture ganache.",
       image: "images/chocolate-truffle.webp",
@@ -25,6 +27,8 @@ const CONFIG = {
       id: "tender-coconut",
       name: "Kerala Tender Coconut (Elaneer)",
       tag: "Kochi Favourite",
+      badgeClass: "badge-mint rotate-pos",
+      cardClass: "card-white",
       description:
         "Soft vanilla sponge soaked in tender coconut milk with fresh elaneer pulp & white chocolate.",
       image: "images/tender-coconut.webp",
@@ -37,6 +41,8 @@ const CONFIG = {
       id: "red-velvet",
       name: "Classic Red Velvet Cream Cheese",
       tag: "Signature",
+      badgeClass: "badge-yellow rotate-neg",
+      cardClass: "card-mint",
       description:
         "Velvety cocoa-kissed crimson layers frosted with tangy house-whipped cream cheese.",
       image: "images/red-velvet.webp",
@@ -49,6 +55,8 @@ const CONFIG = {
       id: "mango-bliss",
       name: "Fresh Alphonso Mango Bliss",
       tag: "Seasonal Special",
+      badgeClass: "badge-yellow rotate-neg",
+      cardClass: "card-mint",
       description:
         "Light sponge layered with real Alphonso mango compote, whipped cream & fresh mango cubes.",
       image: "images/mango-cake.webp",
@@ -60,7 +68,7 @@ const CONFIG = {
   ],
 };
 
-// Track selected size per card in the menu grid
+// Track selected size per card in the menu grid (only 0.5 kg and 1 kg)
 const cardSizeState = {};
 CONFIG.cakes.forEach((cake) => {
   cardSizeState[cake.id] = "0.5 kg";
@@ -81,7 +89,7 @@ function getDateDaysAhead(days) {
   return d;
 }
 
-// Render Cake Cards in Menu Section
+// Render the 4 Signature Cake Cards into the menu grid
 function renderCakeMenu() {
   const grid = document.getElementById("cake-grid");
   if (!grid) return;
@@ -89,51 +97,60 @@ function renderCakeMenu() {
   grid.innerHTML = CONFIG.cakes
     .map((cake) => {
       const selectedSize = cardSizeState[cake.id] || "0.5 kg";
-      const currentPrice = cake.prices[selectedSize];
+      const priceHalfKg = cake.prices["0.5 kg"];
+      const priceOneKg = cake.prices["1 kg"];
 
       return `
-        <article class="cake-card" data-cake-id="${cake.id}">
-          <div class="cake-img-wrap">
-            <img src="${cake.image}" alt="${cake.name} - Sweet Crumbs Kochi" width="800" height="800" loading="lazy" />
-            <span class="cake-tag">${cake.tag}</span>
+        <article class="cake-card ${cake.cardClass}" data-cake-id="${cake.id}">
+          <div class="card-badge-wrap">
+            <span class="sticker-badge ${cake.badgeClass}">
+              ★ ${cake.tag}
+            </span>
           </div>
-          <div class="cake-body">
-            <h3 class="cake-title">${cake.name}</h3>
-            <p class="cake-desc">${cake.description}</p>
-            <div class="card-size-pills" role="group" aria-label="Choose size for ${cake.name}">
+          <div>
+            <div class="card-img-wrap">
+              <img src="${cake.image}" alt="${cake.name} - Sweet Crumbs Kochi" width="600" height="600" loading="lazy" />
+            </div>
+            <h3 class="card-title font-headline">${cake.name}</h3>
+            <p class="card-desc">${cake.description}</p>
+          </div>
+          <div>
+            <div class="card-size-selector" role="group" aria-label="Select size for ${cake.name}">
               <button
                 type="button"
-                class="size-pill-btn ${selectedSize === "0.5 kg" ? "active" : ""}"
+                class="size-btn ${selectedSize === "0.5 kg" ? "active" : ""}"
                 data-action="switch-size"
                 data-cake-id="${cake.id}"
                 data-size="0.5 kg"
               >
-                0.5 kg · ₹${cake.prices["0.5 kg"]}
+                0.5 kg
               </button>
               <button
                 type="button"
-                class="size-pill-btn ${selectedSize === "1 kg" ? "active" : ""}"
+                class="size-btn ${selectedSize === "1 kg" ? "active" : ""}"
                 data-action="switch-size"
                 data-cake-id="${cake.id}"
                 data-size="1 kg"
               >
-                1 kg · ₹${cake.prices["1 kg"]}
+                1 kg
               </button>
             </div>
-            <div class="cake-footer">
-              <div class="cake-price">
-                ₹<span id="price-${cake.id}">${currentPrice}</span>
-                <small id="size-label-${cake.id}">for ${selectedSize}</small>
-              </div>
-              <button
-                type="button"
-                class="btn btn-primary"
-                data-action="select-cake"
-                data-cake-id="${cake.id}"
-              >
-                Select for Order
-              </button>
+            <div class="card-pricing-pill">
+              <span class="card-pricing-text">0.5 kg: ₹${priceHalfKg} &nbsp;|&nbsp; 1 kg: ₹${priceOneKg}</span>
+              <span class="card-pricing-sub">Selected: <strong>${selectedSize} (₹${cake.prices[selectedSize]})</strong></span>
             </div>
+            <button
+              type="button"
+              class="btn btn-primary btn-full"
+              data-action="select-cake"
+              data-cake-id="${cake.id}"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span>Select Cake</span>
+            </button>
           </div>
         </article>
       `;
@@ -141,43 +158,43 @@ function renderCakeMenu() {
     .join("");
 }
 
-// Populate Cake Select Dropdown
+// Populate the cake select options in the WhatsApp order form
 function populateCakeSelect() {
   const select = document.getElementById("order-cake");
   if (!select) return;
 
-  select.textContent = "";
+  select.innerHTML = "";
   CONFIG.cakes.forEach((cake) => {
-    const option = document.createElement("option");
-    option.value = cake.id;
-    option.textContent = `${cake.name} (0.5 kg: ₹${cake.prices["0.5 kg"]} / 1 kg: ₹${cake.prices["1 kg"]})`;
-    select.appendChild(option);
+    const opt = document.createElement("option");
+    opt.value = cake.id;
+    opt.textContent = `${cake.name} (0.5 kg: ₹${cake.prices["0.5 kg"]} / 1 kg: ₹${cake.prices["1 kg"]})`;
+    select.appendChild(opt);
   });
 }
 
-// Calculate and update live summary for Standard Order Form
+// Calculate and update the live order price display (only 0.5 kg and 1 kg)
 function updateStandardOrderSummary() {
   const cakeSelect = document.getElementById("order-cake");
-  const sizeInput = document.querySelector('input[name="size"]:checked');
+  const sizeInput = document.querySelector('input[name="cakeWeight"]:checked');
   const dietarySelect = document.getElementById("order-dietary");
   const priceDisplay = document.getElementById("standard-price-display");
   const metaDisplay = document.getElementById("standard-summary-meta");
 
-  if (!cakeSelect || !sizeInput || !dietarySelect || !priceDisplay || !metaDisplay) return;
+  if (!cakeSelect || !sizeInput || !priceDisplay || !metaDisplay) return;
 
   const cake = CONFIG.cakes.find((c) => c.id === cakeSelect.value) || CONFIG.cakes[0];
   const size = sizeInput.value;
-  const dietary = dietarySelect.value;
+  const dietary = dietarySelect ? dietarySelect.value : "Regular (With Egg)";
   const isEggless = dietary.includes("Eggless");
 
   const basePrice = cake.prices[size] || cake.prices["0.5 kg"];
   const totalPrice = basePrice + (isEggless ? CONFIG.egglessSurchargeINR : 0);
 
-  priceDisplay.textContent = `₹${totalPrice}`;
-  metaDisplay.textContent = `${cake.name} · ${size} · ${isEggless ? "Eggless" : "Regular"}`;
+  priceDisplay.textContent = `₹${totalPrice.toLocaleString("en-IN")}`;
+  metaDisplay.textContent = `${cake.name} · ${size} · ${isEggless ? "Eggless (+₹50)" : "Regular"}`;
 }
 
-// Configure Date Pickers & Lead Time Constraints
+// Set up date pickers with appropriate minimum dates
 function setupDatePickers() {
   const standardDateInput = document.getElementById("order-date");
   const customDateInput = document.getElementById("custom-date");
@@ -203,33 +220,69 @@ function setupDatePickers() {
   }
 }
 
-// Build WhatsApp URL and open in a new tab
+// Open WhatsApp with pre-composed order text
 function openWhatsAppOrder(messageText) {
   const encoded = encodeURIComponent(messageText);
   const whatsappUrl = `https://wa.me/${CONFIG.whatsappNumber}?text=${encoded}`;
   window.open(whatsappUrl, "_blank", "noopener,noreferrer");
 }
 
-// Setup Event Listeners
+// Smooth scroll to an element by ID
+function scrollToElement(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth" });
+  }
+}
+
+// Active navigation highlight on scroll
+function setupScrollSpy() {
+  const navLinks = document.querySelectorAll(".main-navigation .nav-link");
+  const sections = ["menu", "order-form", "custom-cakes", "about"];
+
+  window.addEventListener("scroll", () => {
+    let current = "";
+    sections.forEach((id) => {
+      const section = document.getElementById(id);
+      if (section) {
+        const top = section.offsetTop - 120;
+        if (window.scrollY >= top) {
+          current = id;
+        }
+      }
+    });
+
+    navLinks.forEach((link) => {
+      link.classList.remove("active");
+      const href = link.getAttribute("href");
+      if (href === `#${current}`) {
+        link.classList.add("active");
+      }
+    });
+  });
+}
+
+// Initialize Application
 function initSweetCrumbsApp() {
-  // Set Razorpay link from central CONFIG
+  // Sync Razorpay advance link button from CONFIG
   const rzpBtn = document.getElementById("razorpay-advance-link");
   if (rzpBtn) {
     rzpBtn.href = CONFIG.razorpayAdvanceLink;
   }
 
-  // Footer year
-  const yearEl = document.getElementById("year");
-  if (yearEl) {
-    yearEl.textContent = "2026";
-  }
+  // Update dynamic year
+  const yearEls = document.querySelectorAll(".current-year");
+  yearEls.forEach((el) => {
+    el.textContent = new Date().getFullYear();
+  });
 
   renderCakeMenu();
   populateCakeSelect();
   setupDatePickers();
   updateStandardOrderSummary();
+  setupScrollSpy();
 
-  // Menu Card Interactions (Size Toggle & Select for Order)
+  // Menu card button events (size toggle & select cake)
   const cakeGrid = document.getElementById("cake-grid");
   if (cakeGrid) {
     cakeGrid.addEventListener("click", (e) => {
@@ -249,113 +302,120 @@ function initSweetCrumbsApp() {
         if (cakeSelect) {
           cakeSelect.value = cakeId;
         }
+
         const sizeRadio = document.querySelector(
-          `input[name="size"][value="${chosenSize}"]`
+          `input[name="cakeWeight"][value="${chosenSize}"]`
         );
         if (sizeRadio) {
           sizeRadio.checked = true;
         }
-        updateStandardOrderSummary();
 
-        const orderSection = document.getElementById("order");
-        if (orderSection) {
-          orderSection.scrollIntoView({ behavior: "smooth" });
-        }
+        updateStandardOrderSummary();
+        scrollToElement("order-form");
       }
     });
   }
 
-  // Live Summary Updates on Standard Order Form
+  // Listen to order form changes to update live price
   const standardForm = document.getElementById("standard-order-form");
   if (standardForm) {
     standardForm.addEventListener("change", updateStandardOrderSummary);
 
+    // Standard Order Form Submission
     standardForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const errorEl = document.getElementById("standard-form-error");
-      if (errorEl) errorEl.hidden = true;
+      if (errorEl) {
+        errorEl.textContent = "";
+        errorEl.hidden = true;
+      }
 
       const cakeId = document.getElementById("order-cake").value;
       const cake = CONFIG.cakes.find((c) => c.id === cakeId) || CONFIG.cakes[0];
-      const size = document.querySelector('input[name="size"]:checked').value;
-      const deliveryDate = document.getElementById("order-date").value;
-      const dietary = document.getElementById("order-dietary").value;
-      const customerName = document.getElementById("customer-name").value.trim();
-      const deliveryArea = document.getElementById("delivery-area").value.trim();
-      const cakeMessage = document.getElementById("cake-message").value.trim();
+      const weightElem = document.querySelector('input[name="cakeWeight"]:checked');
+      const weight = weightElem ? weightElem.value : "0.5 kg";
+
+      const date = document.getElementById("order-date").value;
+      const time = document.getElementById("order-time-slot").value;
+      const message = document.getElementById("cake-message").value.trim() || "None";
+      const area = document.getElementById("delivery-area").value.trim();
+      const name = document.getElementById("customer-name").value.trim();
+      const phone = document.getElementById("customer-phone").value.trim();
+      const dietarySelect = document.getElementById("order-dietary");
+      const dietary = dietarySelect ? dietarySelect.value : "Regular (With Egg)";
+      const isEggless = dietary.includes("Eggless");
 
       const todayISO = formatDateISO(getDateDaysAhead(0));
 
-      if (!customerName || !deliveryArea || !deliveryDate) {
+      if (!name || !phone || !area || !date) {
         if (errorEl) {
-          errorEl.textContent =
-            "Please enter your name, delivery area in Kochi, and delivery date.";
+          errorEl.textContent = "Please fill in your name, WhatsApp phone, delivery area, and celebration date.";
           errorEl.hidden = false;
         }
         return;
       }
 
-      if (deliveryDate < todayISO) {
+      if (date < todayISO) {
         if (errorEl) {
-          errorEl.textContent = "Delivery date cannot be in the past.";
+          errorEl.textContent = "Celebration date cannot be in the past.";
           errorEl.hidden = false;
         }
         return;
       }
 
-      const isEggless = dietary.includes("Eggless");
-      const totalPrice =
-        cake.prices[size] + (isEggless ? CONFIG.egglessSurchargeINR : 0);
+      const basePrice = cake.prices[weight] || cake.prices["0.5 kg"];
+      const totalPrice = basePrice + (isEggless ? CONFIG.egglessSurchargeINR : 0);
 
       const messageLines = [
         "Hi Sneha! I would like to place a cake order from *Sweet Crumbs*:",
         "",
         `- *Cake:* ${cake.name}`,
-        `- *Size:* ${size}`,
+        `- *Size:* ${weight}`,
         `- *Preference:* ${dietary.replace("₹", "Rs. ")}`,
         `- *Estimated Price:* Rs. ${totalPrice}`,
-        `- *Delivery Date:* ${deliveryDate}`,
-        `- *Message on Cake:* ${cakeMessage || "None"}`,
+        `- *Delivery Date:* ${date}`,
+        `- *Time Slot:* ${time}`,
+        `- *Message on Cake:* ${message}`,
         "",
-        `- *Customer Name:* ${customerName}`,
-        `- *Delivery Area (Kochi):* ${deliveryArea}`,
+        `- *Customer Name:* ${name} (${phone})`,
+        `- *Delivery Area (Kochi):* ${area}`,
       ];
 
       openWhatsAppOrder(messageLines.join("\n"));
     });
   }
 
-  // Custom Cake Order Form Submission (enforces >= 2 days ahead)
+  // Custom Cake Form Submission
   const customForm = document.getElementById("custom-order-form");
   if (customForm) {
     customForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const errorEl = document.getElementById("custom-form-error");
-      if (errorEl) errorEl.hidden = true;
+      if (errorEl) {
+        errorEl.textContent = "";
+        errorEl.hidden = true;
+      }
 
-      const customerName = document.getElementById("custom-name").value.trim();
+      const name = document.getElementById("custom-name").value.trim();
       const size = document.getElementById("custom-size").value;
       const flavour = document.getElementById("custom-flavour").value;
-      const deliveryDate = document.getElementById("custom-date").value;
+      const date = document.getElementById("custom-date").value;
       const notes = document.getElementById("custom-notes").value.trim();
-      const paymentRef = document.getElementById("custom-ref").value.trim();
+      const ref = document.getElementById("custom-ref").value.trim();
 
-      const minCustomISO = formatDateISO(
-        getDateDaysAhead(CONFIG.customCakeMinDaysAhead)
-      );
+      const minCustomISO = formatDateISO(getDateDaysAhead(CONFIG.customCakeMinDaysAhead));
 
-      if (!customerName || !deliveryDate || !notes) {
+      if (!name || !date || !notes) {
         if (errorEl) {
-          errorEl.textContent =
-            "Please fill in your name, delivery date, and custom design description.";
+          errorEl.textContent = "Please fill in your name, delivery date, and custom design description.";
           errorEl.hidden = false;
         }
         return;
       }
 
-      if (deliveryDate < minCustomISO) {
+      if (date < minCustomISO) {
         if (errorEl) {
-          errorEl.textContent = `Custom cakes require at least ${CONFIG.customCakeMinDaysAhead} days notice. Please choose ${minCustomISO} or later.`;
+          errorEl.textContent = `Custom theme cakes require at least ${CONFIG.customCakeMinDaysAhead} days advance notice. Please select ${minCustomISO} or later.`;
           errorEl.hidden = false;
         }
         return;
@@ -367,13 +427,13 @@ function initSweetCrumbsApp() {
         `- *Order Type:* Custom Theme Cake`,
         `- *Base Flavour:* ${flavour}`,
         `- *Size:* ${size}`,
-        `- *Delivery Date:* ${deliveryDate} (2+ days notice)`,
+        `- *Delivery Date:* ${date} (2+ days notice)`,
         `- *Theme & Cake Message:* ${notes}`,
         `- *Rs. ${CONFIG.advanceAmountINR} Razorpay Advance:* ${
-          paymentRef || `Paid / Paying via ${CONFIG.razorpayAdvanceLink}`
+          ref || `Paid / Paying via ${CONFIG.razorpayAdvanceLink}`
         }`,
         "",
-        `- *Customer Name:* ${customerName}`,
+        `- *Customer Name:* ${name}`,
       ];
 
       openWhatsAppOrder(messageLines.join("\n"));
